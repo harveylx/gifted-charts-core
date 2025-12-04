@@ -1,6 +1,6 @@
 {
-  "name": "gifted-charts-core",
-  "version": "0.1.71",
+  "name": "@harveylx/gifted-charts-core",
+  "version": "0.1.72",
   "description": "Mathematical and logical utilities used by react-gifted-charts and react-native-gifted-charts",
   "main": "./dist/index.js",
   "files": [
@@ -51,13 +51,13 @@
       "last 1 safari version"
     ]
   },
-  "repository": "https://github.com/Abhinandan-Kushwaha/gifted-charts-core",
-  "author": "Abhinandan Kushwaha <kushabhi5@gmail.com> (https://github.com/Abhinandan-Kushwaha)",
+  "repository": "https://github.com/harveylx/gifted-charts-core",
+  "author": "Harvey Singh <dev@harveysingh.xyz>",
   "license": "MIT",
   "bugs": {
-    "url": "https://github.com/Abhinandan-Kushwaha/gifted-charts-core/issues"
+    "url": "https://github.com/harveylx/gifted-charts-core/issues"
   },
-  "homepage": "https://github.com/Abhinandan-Kushwaha/gifted-charts-core#readme",
+  "homepage": "https://github.com/harveylx/gifted-charts-core#readme",
   "publishConfig": {
     "registry": "https://registry.npmjs.org/"
   },
