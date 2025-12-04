@@ -384,6 +384,7 @@ export interface LineChartPropsType {
   spreadAreaData?: SpreadData[]
   spreadAreaColor?: ColorValue
   spreadAreaOpacity?: number
+  showBackgroundSlices?: boolean
 }
 
 export interface lineDataItem {
