@@ -396,6 +396,7 @@ export interface BarAndLineChartsWrapperTypes {
   xAxisLabelsAtBottom: boolean
   onScrollEndDrag?: (event: any, direction: any) => void
   showVerticalLines?: boolean
+  showBackgroundSlices?: boolean
 }
 
 export interface HorizontalStripConfig {
