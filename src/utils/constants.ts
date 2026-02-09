@@ -232,20 +232,26 @@ export const BubbleDefaults = {
   showBubbleOnFocus: false,
   showBubbleLabelOnFocus: false,
   labelFontSize: 10,
-  borderWidth: 0,
-  borderColor: '#333',
-  opacity: 0.8,
+  borderWidth: 1,
+  borderColor: 'skyblue',
+  opacity: 0.7,
+  borderOpacity: 1,
   bubblesColor: 'skyblue',
   focusedBubbleColor: 'orange',
   initialSpacing: 0,
-  endSpacing: 20,
+  endSpacing: 4,
   spacing: 50,
   regressionLineConfig: {
     thickness: 1,
     color: 'black',
     opacity: 1
   },
-  scatterChart: false
+  scatterChart: false,
+  minRadius: 8,
+  autoRoundLabelsY: false,
+  autoRoundLabelsX: false,
+  showGradient: true,
+  centerColorForGradient: 'white'
 }
 
 export const defaultLineConfig: defaultLineConfigType = {

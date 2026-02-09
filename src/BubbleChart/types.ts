@@ -159,6 +159,8 @@ export interface BubbleChartPropsType {
   bubblesHeight?: number
   bubblesWidth?: number
   bubblesRadius?: number
+  minRadius?: number
+  maxRadius?: number
   bubblesColor?: string
   bubblesShape?: string
   customBubble?: Function
@@ -245,10 +247,16 @@ export interface BubbleChartPropsType {
   showRegressionLine?: boolean
   regressionLineConfig?: RegressionLineConfig
   scatterChart?: boolean
+  autoRoundLabels?: boolean
+  autoRoundLabelsX?: boolean
+  autoRoundLabelsY?: boolean
+  showGradient?: boolean
+  centerColorForGradient?: ColorValue
 }
 
 export interface bubbleDataItem {
   y: number
+  value?: number
   label?: string
   labelWidth?: number
   labelHeight?: number
@@ -310,4 +318,6 @@ export interface bubbleDataItem {
   borderColor?: ColorValue
   borderOpacity?: number
   opacity?: number
+  showGradient?: boolean
+  centerColorForGradient?: ColorValue
 }

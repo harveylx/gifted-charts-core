@@ -1239,7 +1239,7 @@ export const computeMaxAndMinXForBubble = (
     return { maxItem: 0, minItem: 0 }
   }
   let maxItem = 0
-  let minItem = 0
+  let minItem = Infinity
 
   data.forEach((item: any, index: number) => {
     if (item.x > maxItem) {
@@ -1978,4 +1978,24 @@ export const pointsWithPaddedRepititions = (
   }
 
   return [oldPointsCopy.trim(), newPointsCopy.trim()]
+}
+
+export const withinMinMaxRange = (
+  val: number,
+  maxVal: number,
+  minVal: number
+) => Math.min(maxVal, Math.max(minVal, val))
+
+export const getIntegerizedValue = (value: number) => {
+  const decimals = value.toString().split('.')[1]?.length || 0
+  const factor = 10 ** decimals
+  const integerizedValue = value * factor
+  const lastDigit = integerizedValue % 10
+  if (integerizedValue > 10 && lastDigit !== 0 && lastDigit !== 5) {
+    const roundedIntegerized = Math.round(integerizedValue / 5) * 5
+
+    const ans = roundedIntegerized / factor
+    return ans
+  }
+  return value
 }

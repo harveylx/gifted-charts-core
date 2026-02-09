@@ -131,7 +131,8 @@ export {
   clone,
   getLineConfigForBarChart,
   adjustToOffset,
-  pointsWithPaddedRepititions
+  pointsWithPaddedRepititions,
+  withinMinMaxRange
 } from './utils'
 
 export {

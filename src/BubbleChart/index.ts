@@ -4,10 +4,11 @@ import {
   computeMaxAndMinYForBubble,
   getAxesAndRulesProps,
   getExtendedContainerHeightWithPadding,
+  getIntegerizedValue,
   getMaxValue,
   getNoOfSections,
-  indexOfFirstNonZeroDigit
-  // weightedRegression
+  indexOfFirstNonZeroDigit,
+  withinMinMaxRange
 } from '../utils'
 import {
   AxesAndRulesDefaults,
@@ -24,6 +25,11 @@ export interface extendedBubbleChartPropsType extends BubbleChartPropsType {
 
 export const useBubbleChart = (props: extendedBubbleChartPropsType) => {
   const { data = [], formatXLabel } = props
+
+  // For the sake of uniformity across other charts, allow value as an alternate to y
+  for (const item of data) {
+    if (item.y === undefined && item.value !== undefined) item.y = item.value
+  }
 
   const yNoOfSections = getNoOfSections(
     props.yNoOfSections,
@@ -45,7 +51,35 @@ export const useBubbleChart = (props: extendedBubbleChartPropsType) => {
     props.yRoundToDigits ??
     (showFractionalYAxis ? indexOfFirstNonZeroDigit(yRange) + 1 : 0)
 
-  const bubblesRadius = props.bubblesRadius ?? BubbleDefaults.bubblesRadius
+  const minRadius = props.minRadius ?? BubbleDefaults.minRadius
+  const maxRadius =
+    props.maxRadius ?? Math.min(containerHeight, props.width ?? Infinity) / 5
+
+  let xRange =
+    Math.max(...data.map((i: any) => Math.max(i.x ?? 0, 0))) - // find the largest +ve number
+      Math.min(...data.map((i: any) => Math.max(i.x ?? 0, 0))) || // find the smallest +ve number
+    data.length
+
+  const xNoOfSections = getNoOfSections(
+    props.xNoOfSections,
+    props.maxX,
+    props.xStepValue,
+    true
+  )
+
+  const initialSpacing = props.initialSpacing ?? BubbleDefaults.initialSpacing
+  const spacing = props.spacing ?? LineDefaults.spacing
+
+  const showFractionalXAxis =
+    props.showFractionalXAxis ??
+    (isFinite(xRange) && xRange - 1 <= xNoOfSections)
+  const xRoundToDigits =
+    props.xRoundToDigits ??
+    (showFractionalXAxis ? indexOfFirstNonZeroDigit(xRange) + 1 : 0)
+
+  const endSpacing = props.endSpacing ?? BubbleDefaults.endSpacing
+
+  const totalWidth = initialSpacing + spacing * xNoOfSections + endSpacing
 
   const { maxItem: yMaxItem, minItem: yMinItem } = computeMaxAndMinYForBubble(
     data,
@@ -54,58 +88,56 @@ export const useBubbleChart = (props: extendedBubbleChartPropsType) => {
     showFractionalYAxis,
     data
   )
+  const bubblesRadius = props.bubblesRadius ?? BubbleDefaults.bubblesRadius
 
-  // Find the maximum radius across all bubbles to account for bubble size in chart bounds
-  const maxBubbleRadius = props.hideBubbles
-    ? 0
-    : data.length > 0
-    ? Math.max(
-        bubblesRadius,
-        ...data.map((item: any) => item.r ?? bubblesRadius)
-      )
-    : bubblesRadius
-
-  const maxYInitial =
+  let maxY = // should change only once and that's when autoRoundLabelsY is true
     getMaxValue(props.maxY, props.yStepValue, yNoOfSections, yMaxItem) || 10
 
-  const mostNegativeYInitial = props.mostNegativeY ?? yMinItem
+  const mostNegativeY = props.mostNegativeY ?? yMinItem
 
-  const onlyPositive = props.onlyPositive ?? mostNegativeYInitial >= 0
+  const onlyPositive = props.onlyPositive ?? mostNegativeY >= 0
 
   const horizSections = [{ value: '0' }]
-  const yStepHeight = props.yStepHeight ?? containerHeight / yNoOfSections
+  let yStepHeight = props.yStepHeight ?? containerHeight / yNoOfSections
+  let yStepValue = props.yStepValue ?? maxY / yNoOfSections
 
-  // Adjust maxY to account for bubble radius at the top of the chart
-  // Convert max bubble radius from screen pixels to Y value space
-  const maxYRadiusPadding =
-    containerHeight > 0 ? (maxBubbleRadius * maxYInitial) / containerHeight : 0
-  const maxY = props.maxY ?? maxYInitial + maxYRadiusPadding
+  const yScale = yStepHeight / yStepValue
 
-  const yStepValue = props.yStepValue ?? maxY / yNoOfSections
+  /*******************************************************************************************
+   * *************      RE - CALCULATE maxY, yStepValue & yStepHeight               *********
+   ******************************************************************************************/
+
+  let topMostReachingBubbleY = 0
+  for (const item of data) {
+    const radius = withinMinMaxRange(
+      item.r ?? bubblesRadius,
+      maxRadius,
+      minRadius
+    )
+    const maxY = ((item.y ?? 0) + radius / yScale) * 1.01 // 1.01 is a factor to get a little higher value of maxY. This avoids cut-off from top
+    topMostReachingBubbleY = Math.max(maxY, topMostReachingBubbleY)
+  }
+
+  maxY = topMostReachingBubbleY
+
+  yStepHeight = props.yStepHeight ?? containerHeight / yNoOfSections
+  yStepValue = props.yStepValue ?? maxY / yNoOfSections
+  /*******************************************************************************************
+   *******************************************************************************************/
+
+  const autoRoundLabelsY =
+    props.autoRoundLabelsY ??
+    props.autoRoundLabels ??
+    BubbleDefaults.autoRoundLabelsY
+  if (autoRoundLabelsY) {
+    yStepValue = getIntegerizedValue(yStepValue)
+    maxY = yStepValue * yNoOfSections
+  }
 
   const yNegativeStepValue = props.yNegativeStepValue ?? yStepValue
 
-  // Adjust mostNegativeY to account for bubble radius at the bottom of the chart
-  // Convert max bubble radius from screen pixels to Y value space for negative values
-  // Use an approximation: assume the negative quadrant height is roughly proportional to the absolute value
-  const mostNegativeYRadiusPadding =
-    containerHeight > 0 && mostNegativeYInitial < 0
-      ? (maxBubbleRadius * Math.abs(mostNegativeYInitial)) / containerHeight
-      : 0
-  const mostNegativeY =
-    mostNegativeYInitial < 0
-      ? mostNegativeYInitial - mostNegativeYRadiusPadding
-      : mostNegativeYInitial
-
-  const xRange =
-    Math.max(...data.map((i: any) => Math.max(i.x, 0))) - // find the largest +ve number
-    Math.min(...data.map((i: any) => Math.max(i.x, 0))) // find the smallest +ve number
-
-  const showFractionalXAxis =
-    props.showFractionalXAxis ?? (isFinite(xRange) && xRange <= 1)
-  const xRoundToDigits =
-    props.xRoundToDigits ??
-    (showFractionalXAxis ? indexOfFirstNonZeroDigit(xRange) + 1 : 0)
+  const xAxisThickness =
+    props.xAxisThickness ?? AxesAndRulesDefaults.xAxisThickness
 
   const { maxItem: xMaxItem, minItem: xMinItem } = computeMaxAndMinXForBubble(
     data,
@@ -114,77 +146,28 @@ export const useBubbleChart = (props: extendedBubbleChartPropsType) => {
     showFractionalXAxis,
     data
   )
-  const xNoOfSections = getNoOfSections(
-    props.xNoOfSections,
-    props.maxX,
-    props.xStepValue,
-    true
-  )
-
-  const maxXInitial =
+  let maxX = // should change only once and that's when autoRoundLabelsX is true
     getMaxValue(props.maxX, props.xStepValue, xNoOfSections, xMaxItem) || 10
-  const minXInitial = xMinItem
+  const minX = xMinItem
 
-  // Adjust minX and maxX to account for bubble radius on left and right sides
-  // Convert max bubble radius from screen pixels to X value space
-  // We'll need spacing and totalWidth for accurate conversion, but we can use an approximation first
-  // For now, we'll adjust after we have spacing calculated
-  const xRangeInitial = maxXInitial - minXInitial
+  let leftMostReachingBubblesX = Infinity
+  let rightMostReachingBubblesX = 0
 
-  // const xStepHeight = props.xStepHeight ?? containerHeight / yNoOfSections
-  // Calculate xStepValue based on the range instead of just maxX
-  const xStepValue =
+  for (const [index, item] of data.entries()) {
+    const radius = withinMinMaxRange(
+      item.r ?? bubblesRadius,
+      maxRadius,
+      minRadius
+    )
+    const leftX = (item.x ?? index + 1) - radius
+    const rightX = (item.x ?? index + 1) + radius
+    leftMostReachingBubblesX = Math.min(leftX, leftMostReachingBubblesX)
+    rightMostReachingBubblesX = Math.max(rightX, rightMostReachingBubblesX)
+  }
+
+  let xStepValue =
     props.xStepValue ??
-    (xRangeInitial > 0
-      ? xRangeInitial / xNoOfSections
-      : maxXInitial / xNoOfSections)
-
-  const initialSpacing = props.initialSpacing ?? BubbleDefaults.initialSpacing
-  const endSpacing = props.endSpacing ?? BubbleDefaults.endSpacing
-
-  // Calculate initial spacing estimate for radius conversion
-  // We'll refine this after adjusting minX/maxX
-  const estimatedSpacing =
-    props.spacing ??
-    (props.width
-      ? (props.width - initialSpacing - endSpacing) / xNoOfSections
-      : BubbleDefaults.spacing)
-
-  // Adjust minX and maxX to account for bubble radius on left and right sides
-  // Convert max bubble radius from screen pixels to X value space
-  const estimatedXRange = maxXInitial - minXInitial
-  // Calculate scale: pixels per unit in data space
-  // estimatedSpacing is pixels per section, so scale = (pixels/section) / (dataUnits/section)
-  const estimatedXScale =
-    estimatedXRange > 0 && estimatedSpacing > 0
-      ? (estimatedSpacing * xNoOfSections) / estimatedXRange
-      : 1
-  const maxXRadiusPadding =
-    estimatedXScale > 0 ? maxBubbleRadius / estimatedXScale : 0
-  const minXRadiusPadding =
-    estimatedXScale > 0 ? maxBubbleRadius / estimatedXScale : 0
-
-  const minX = minXInitial - minXRadiusPadding
-  const maxX = props.maxX ?? maxXInitial + maxXRadiusPadding
-  const xRangeAdjusted = maxX - minX
-
-  // Recalculate xStepValue based on adjusted range
-  const xStepValueAdjusted =
-    props.xStepValue ??
-    (xRangeAdjusted > 0 ? xRangeAdjusted / xNoOfSections : xStepValue)
-
-  const xAxisLabelTexts =
-    props.xAxisLabelTexts ??
-    Array.from({ length: xNoOfSections + 1 }, (_, i) => {
-      if (i === 0 && initialSpacing === 0) return ''
-      const labelText = (minX + xStepValueAdjusted * i)
-        .toFixed(xRoundToDigits)
-        .toString()
-      if (formatXLabel) {
-        return formatXLabel(labelText)
-      }
-      return labelText
-    })
+    (rightMostReachingBubblesX - leftMostReachingBubblesX) / xNoOfSections
 
   const noOfSectionsBelowXAxis =
     props.noOfSectionsBelowXAxis ??
@@ -200,19 +183,6 @@ export const useBubbleChart = (props: extendedBubbleChartPropsType) => {
 
   const horizontal = false
   const yAxisAtTop = false
-
-  const xAxisThickness =
-    props.xAxisThickness ?? AxesAndRulesDefaults.xAxisThickness
-
-  const spacing =
-    props.spacing ??
-    (props.width
-      ? (props.width - initialSpacing - endSpacing) /
-        (xAxisLabelTexts.length - 1)
-      : BubbleDefaults.spacing)
-
-  const totalWidth =
-    initialSpacing + spacing * (xAxisLabelTexts.length - 1) + endSpacing
 
   const disableScroll = props.disableScroll ?? false
   const showScrollIndicator = props.showScrollIndicator ?? false
@@ -248,13 +218,12 @@ export const useBubbleChart = (props: extendedBubbleChartPropsType) => {
   const xAxisIndicesColor =
     props.xAxisIndicesColor ?? AxesAndRulesDefaults.xAxisIndicesColor
 
-  //   const pointerConfig = props.pointerConfig
   const getPointerProps = props.getPointerProps ?? null
 
   const bubblesWidth = props.bubblesWidth ?? BubbleDefaults.bubblesWidth
   const extraWidthDueToBubble = props.hideBubbles
     ? 0
-    : bubblesRadius ?? bubblesWidth
+    : Math.min(10, bubblesRadius ?? bubblesWidth)
 
   const xAxisLabelsAtBottom = props.xAxisLabelsAtBottom ?? false
 
@@ -268,6 +237,11 @@ export const useBubbleChart = (props: extendedBubbleChartPropsType) => {
   const secondaryMinItem = maxY * -1
   const showSecondaryFractionalValues = false
   const secondaryRoundToDigits = 1
+
+  // const autoRoundLabelsX =
+  //   props.autoRoundLabelsX ??
+  //   props.autoRoundLabels ??
+  //   BubbleDefaults.autoRoundLabelsX
 
   const axesAndRulesProps = getAxesAndRulesProps(
     props,
@@ -298,19 +272,109 @@ export const useBubbleChart = (props: extendedBubbleChartPropsType) => {
     (props.mostNegativeY ?? 0) < 0 ||
     props.data?.some((item) => (item.y ?? 0) < 0)
 
-  // Use adjusted xStepValue for scale calculation
-  const xScale = spacing / xStepValueAdjusted
+  /*******************************************************************************************
+   * *************               RE - CALCULATE xScale & xStepValue                  *********
+   ******************************************************************************************/
+
+  let xScale = spacing / xStepValue
+
+  leftMostReachingBubblesX = Infinity
+  rightMostReachingBubblesX = 0
+  for (const [index, item] of data.entries()) {
+    const radius = withinMinMaxRange(
+      item.r ?? bubblesRadius,
+      maxRadius,
+      minRadius
+    )
+    const leftX = (item.x ?? index + 1) - radius / xScale
+    const rightX = (item.x ?? index + 1) + radius / xScale
+    leftMostReachingBubblesX = Math.min(leftX, leftMostReachingBubblesX)
+    rightMostReachingBubblesX = Math.max(rightX, rightMostReachingBubblesX)
+  }
+
+  xStepValue =
+    props.xStepValue ??
+    (rightMostReachingBubblesX - leftMostReachingBubblesX) / xNoOfSections
+
+  xScale = spacing / xStepValue
+  /*******************************************************************************************
+   *******************************************************************************************/
+
+  /*******************************************************************************************
+   * *************            3rd iteration for xScale & xStepValue             *********
+   ******************************************************************************************/
+
+  leftMostReachingBubblesX = Infinity
+  rightMostReachingBubblesX = 0
+  for (const [index, item] of data.entries()) {
+    const radius = withinMinMaxRange(
+      item.r ?? bubblesRadius,
+      maxRadius,
+      minRadius
+    )
+    const leftX = (item.x ?? index + 1) - radius / xScale
+    const rightX = (item.x ?? index + 1) + radius / xScale
+    leftMostReachingBubblesX = Math.min(leftX, leftMostReachingBubblesX)
+    rightMostReachingBubblesX = Math.max(rightX, rightMostReachingBubblesX)
+  }
+
+  // if (autoRoundLabelsX)
+  //   leftMostReachingBubblesX = getIntegerizedValue(
+  //     Number(leftMostReachingBubblesX.toFixed(roundToDigits))
+  //   )
+
+  xStepValue =
+    props.xStepValue ??
+    Number(
+      (
+        (rightMostReachingBubblesX - leftMostReachingBubblesX) /
+        xNoOfSections
+      )//.toFixed(roundToDigits)
+    )
+
+  // if (autoRoundLabelsX) {
+  //   xStepValue = getIntegerizedValue(xStepValue)
+  //   maxX = xStepValue * xNoOfSections
+  // }
+
+  xScale = spacing / xStepValue
+  /*******************************************************************************************
+   *******************************************************************************************/
+
+
+  const xAxisLabelTexts =
+    props.xAxisLabelTexts ??
+    Array.from({ length: xNoOfSections + 1 }, (_, i) => {
+      const labelText = (leftMostReachingBubblesX + xStepValue * i)
+        .toFixed(xRoundToDigits)
+        .toString()
+      if (formatXLabel) {
+        return formatXLabel(labelText)
+      }
+      return labelText
+    })
 
   const getX = (index: number): number => {
-    const val =
-      props.data?.[index].x !== undefined
-        ? ((props.data?.[index].x ?? 0) - minX) * xScale // redundant ?? just to avoid lint highlighting
-        : Math.min(
-            totalWidth -
-              (props.data?.[index].r ?? BubbleDefaults.bubblesRadius),
-            ((index + 1) * totalWidth) / (props.data?.length ?? 1)
-          )
-    return val + initialSpacing
+    const item = props.data?.[index]
+    let val
+    if (item?.x !== undefined) {
+      val =
+        ((item?.x ?? 0) - leftMostReachingBubblesX) * xScale + initialSpacing
+    } else {
+      const radius = withinMinMaxRange(
+        item?.r ?? bubblesRadius,
+        maxRadius,
+        minRadius
+      )
+      val =
+        Math.min(
+          totalWidth - (item?.r ?? BubbleDefaults.bubblesRadius),
+          (index * totalWidth) / (props.data?.length ?? 1)
+        ) -
+        leftMostReachingBubblesX +
+        radius
+    }
+    return val
   }
 
   const getY = (value: number): number => {
@@ -379,6 +443,7 @@ export const useBubbleChart = (props: extendedBubbleChartPropsType) => {
   const borderWidth = props.borderWidth ?? BubbleDefaults.borderWidth
   const borderColor = props.borderColor ?? BubbleDefaults.borderColor
   const opacity = props.opacity ?? BubbleDefaults.opacity
+  const borderOpacity = props.borderOpacity ?? BubbleDefaults.borderOpacity
 
   const showRegressionLine = props.showRegressionLine ?? false
 
@@ -432,9 +497,9 @@ export const useBubbleChart = (props: extendedBubbleChartPropsType) => {
     const y1_data = slope * minX + intercept
     const y2_data = slope * maxX + intercept
 
-    // Convert X coordinates to screen space (matching getX formula)
-    regressionLineX1 = initialSpacing
-    regressionLineX2 = (maxX - minX) * xScale + initialSpacing
+    // Convert X coordinates to screen space
+    regressionLineX1 = minX * xScale
+    regressionLineX2 = maxX * xScale
 
     // Convert Y coordinates to screen space using getY function
     regressionLineY1 = getY(y1_data)
@@ -458,6 +523,10 @@ export const useBubbleChart = (props: extendedBubbleChartPropsType) => {
   }
 
   const scatterChart = props.scatterChart ?? BubbleDefaults.scatterChart
+  const showGradient =
+    props.showGradient ?? (scatterChart ? false : BubbleDefaults.showGradient)
+  const centerColorForGradient =
+    props.centerColorForGradient ?? BubbleDefaults.centerColorForGradient
 
   const barAndLineChartsWrapperProps: BarAndLineChartsWrapperTypes = {
     chartType: chartTypes.BUBBLE,
@@ -541,6 +610,7 @@ export const useBubbleChart = (props: extendedBubbleChartPropsType) => {
     xAxisLabelTexts
   }
   return {
+    data,
     totalWidth,
     animationDuration,
     containerHeightIncludingBelowXAxis,
@@ -568,6 +638,8 @@ export const useBubbleChart = (props: extendedBubbleChartPropsType) => {
     bubblesHeight,
     bubblesColor,
     bubblesRadius,
+    minRadius,
+    maxRadius,
     labelFontSize,
     labelTextStyle: props.labelTextStyle,
     startIndex,
@@ -583,6 +655,7 @@ export const useBubbleChart = (props: extendedBubbleChartPropsType) => {
     borderWidth,
     borderColor,
     opacity,
+    borderOpacity,
     xAxisLabelTexts,
     showRegressionLine,
     regressionLineConfig,
@@ -590,6 +663,9 @@ export const useBubbleChart = (props: extendedBubbleChartPropsType) => {
     regressionLineY1,
     regressionLineX2,
     regressionLineY2,
-    scatterChart
+    scatterChart,
+    extraWidthDueToBubble,
+    showGradient,
+    centerColorForGradient
   }
 }
