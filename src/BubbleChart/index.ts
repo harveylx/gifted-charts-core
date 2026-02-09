@@ -159,8 +159,9 @@ export const useBubbleChart = (props: extendedBubbleChartPropsType) => {
       maxRadius,
       minRadius
     )
-    const leftX = (item.x ?? index + 1) - radius
-    const rightX = (item.x ?? index + 1) + radius
+    const rescaledRadius = (item.x ?? index + 1) / (radius === 0 ? 1 : radius)
+    const leftX = (item.x ?? index + 1) - rescaledRadius
+    const rightX = (item.x ?? index + 1) + rescaledRadius
     leftMostReachingBubblesX = Math.min(leftX, leftMostReachingBubblesX)
     rightMostReachingBubblesX = Math.max(rightX, rightMostReachingBubblesX)
   }
@@ -326,10 +327,7 @@ export const useBubbleChart = (props: extendedBubbleChartPropsType) => {
   xStepValue =
     props.xStepValue ??
     Number(
-      (
-        (rightMostReachingBubblesX - leftMostReachingBubblesX) /
-        xNoOfSections
-      )//.toFixed(roundToDigits)
+      (rightMostReachingBubblesX - leftMostReachingBubblesX) / xNoOfSections //.toFixed(roundToDigits)
     )
 
   // if (autoRoundLabelsX) {
@@ -340,7 +338,6 @@ export const useBubbleChart = (props: extendedBubbleChartPropsType) => {
   xScale = spacing / xStepValue
   /*******************************************************************************************
    *******************************************************************************************/
-
 
   const xAxisLabelTexts =
     props.xAxisLabelTexts ??
