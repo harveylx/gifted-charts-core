@@ -7,7 +7,8 @@ import { type FontStyle } from 'react-native-svg'
 export enum chartTypes {
   BAR,
   LINE,
-  LINE_BI_COLOR
+  LINE_BI_COLOR,
+  BUBBLE
 }
 
 export const defaultCurvature = 0.2
@@ -91,6 +92,7 @@ export const AxesAndRulesDefaults = {
   verticalLinesStrokeLinecap: 'butt',
 
   noOfSections: 10,
+  xNoOfSections: 5,
   containerHeight: 200,
   width: 200,
 
@@ -217,6 +219,39 @@ export const LineDefaults = {
   strokeLinecap: 'butt' as Linecap,
   highlightEnabled: false,
   lowlightOpacity: 0.3
+}
+
+// Bubble chart specific
+
+export const BubbleDefaults = {
+  bubblesRadius: 10,
+  bubblesWidth: 20,
+  bubblesHeight: 20,
+  bubblesShape: 'circular',
+  showValuesAsBubbleLabels: false,
+  showBubbleOnFocus: false,
+  showBubbleLabelOnFocus: false,
+  labelFontSize: 10,
+  borderWidth: 1,
+  borderColor: 'skyblue',
+  opacity: 0.7,
+  borderOpacity: 1,
+  bubblesColor: 'skyblue',
+  focusedBubbleColor: 'orange',
+  initialSpacing: 0,
+  endSpacing: 4,
+  spacing: 50,
+  regressionLineConfig: {
+    thickness: 1,
+    color: 'black',
+    opacity: 1
+  },
+  scatterChart: false,
+  minRadius: 8,
+  autoRoundLabelsY: false,
+  autoRoundLabelsX: false,
+  showGradient: true,
+  centerColorForGradient: 'white'
 }
 
 export const defaultLineConfig: defaultLineConfigType = {
@@ -410,6 +445,11 @@ export const radarChartDefaults = {
     gradientColor: 'lightgray',
     showGradient: false,
     opacity: 0.7
+  },
+  chartContainerProps: {
+    shiftX: 0,
+    shiftY: 0,
+    backgroundColor: 'transparent'
   },
 
   asterLineStrokeDashArray: [4, 4],

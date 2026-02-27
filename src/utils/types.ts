@@ -398,6 +398,7 @@ export interface BarAndLineChartsWrapperTypes {
   onScrollEndDrag?: (event: any, direction: any) => void
   showVerticalLines?: boolean
   showBackgroundSlices?: boolean
+  xAxisLabelTexts?: string[]
 }
 
 export interface HorizontalStripConfig {
@@ -409,6 +410,15 @@ export interface HorizontalStripConfig {
   labelComponent?: Function
   labelComponentHeight?: number
   labelComponentWidth?: number
+}
+
+export interface RegressionLineConfig {
+  thickness?: number
+  color?: ColorValue
+  opacity?: number
+  strokeDashArray?: number[]
+  isAnimated?: boolean
+  animationDuration?: number
 }
 
 export interface Pointer {
@@ -562,4 +572,12 @@ export interface ColorFromToY {
   from: number
   to: number
   color: ColorValue
+}
+
+export interface RadarChartContainerProps {
+  height?: number
+  width?: number
+  shiftX?: number
+  shiftY?: number
+  backgroundColor?: ColorValue
 }

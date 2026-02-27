@@ -38,6 +38,16 @@ export {
   type LineChartBicolorPropsTypeForWeb
 } from './LineChart/types'
 
+/************************************************************************************************************************
+/*****************************************              Bubble Chart              *****************************************
+/************************************************************************************************************************/
+
+export { useBubbleChart } from './BubbleChart'
+export {
+  type BubbleChartPropsType,
+  type bubbleDataItem
+} from './BubbleChart/types'
+
 /***********************************************************************************************************************
 /*****************************************              Pie Chart              *****************************************
 /***********************************************************************************************************************/
@@ -121,7 +131,8 @@ export {
   clone,
   getLineConfigForBarChart,
   adjustToOffset,
-  pointsWithPaddedRepititions
+  pointsWithPaddedRepititions,
+  withinMinMaxRange
 } from './utils'
 
 export {
@@ -139,6 +150,7 @@ export {
   BarDefaults,
   defaultLineConfig,
   LineDefaults,
+  BubbleDefaults,
   defaultPointerConfig,
   pieColors,
   populationDefaults,

@@ -805,14 +805,20 @@ export const getAxesAndRulesProps = (
     }
   }
 
-  const secondaryNoOfSections = secondaryYAxis?.noOfSections ?? noOfSections
+  const secondaryNoOfSections =
+    props.secondaryYAxis ?? props.lineConfig?.isSecondary
+      ? secondaryYAxis?.noOfSections ?? noOfSections
+      : 0
 
   const secondaryStepValue =
     secondaryYAxis?.stepValue ??
-    (secondaryYAxis?.maxValue ?? secondaryMaxValue) / secondaryNoOfSections
+    (secondaryNoOfSections
+      ? (secondaryYAxis?.maxValue ?? secondaryMaxValue) / secondaryNoOfSections
+      : 0)
 
   const secondaryStepHeight =
-    secondaryYAxis?.stepHeight ?? containerHeight / secondaryNoOfSections
+    secondaryYAxis?.stepHeight ??
+    (secondaryNoOfSections ? containerHeight / secondaryNoOfSections : 0)
 
   const secondaryNegativeStepValue =
     secondaryYAxis?.negativeStepValue ?? secondaryStepValue
@@ -1195,6 +1201,61 @@ export const computeMaxAndMinItems = (
   return maxAndMinUtil(maxItem, minItem, roundToDigits, showFractionalValues)
 }
 
+export const computeMaxAndMinYForBubble = (
+  data: any[] | undefined,
+  extrapolateMissingValues: boolean,
+  roundToDigits?: number,
+  showFractionalValues?: boolean,
+  propsData?: any[]
+): MaxAndMin => {
+  if (!data?.length) {
+    return { maxItem: 0, minItem: 0 }
+  }
+  let maxItem = 0
+  let minItem = 0
+
+  data.forEach((item: any, index: number) => {
+    if (item.y > maxItem) {
+      maxItem = item.y
+    }
+    if (
+      item.y < minItem &&
+      (extrapolateMissingValues || propsData?.[index].y)
+    ) {
+      minItem = item.y
+    }
+  })
+
+  return maxAndMinUtil(maxItem, minItem, roundToDigits, showFractionalValues)
+}
+export const computeMaxAndMinXForBubble = (
+  data: any[] | undefined,
+  extrapolateMissingValues: boolean,
+  roundToDigits?: number,
+  showFractionalValues?: boolean,
+  propsData?: any[]
+): MaxAndMin => {
+  if (!data?.length) {
+    return { maxItem: 0, minItem: 0 }
+  }
+  let maxItem = 0
+  let minItem = Infinity
+
+  data.forEach((item: any, index: number) => {
+    if (item.x > maxItem) {
+      maxItem = item.x
+    }
+    if (
+      item.x < minItem &&
+      (extrapolateMissingValues || propsData?.[index].x)
+    ) {
+      minItem = item.x
+    }
+  })
+
+  return maxAndMinUtil(maxItem, minItem, roundToDigits, showFractionalValues)
+}
+
 export const getLabelTextUtil = (
   val: string,
   index: number,
@@ -1368,11 +1429,15 @@ export const getLineConfigForBarChart = (
 export const getNoOfSections = (
   noOfSections: number | undefined,
   maxValue: number | undefined,
-  stepValue: number | undefined
+  stepValue: number | undefined,
+  isX?: boolean
 ): number =>
   maxValue && stepValue
     ? maxValue / stepValue
-    : noOfSections ?? AxesAndRulesDefaults.noOfSections
+    : noOfSections ??
+      (isX
+        ? AxesAndRulesDefaults.xNoOfSections
+        : AxesAndRulesDefaults.noOfSections)
 
 export const getMaxValue = (
   maxValue: number | undefined,
@@ -1913,4 +1978,24 @@ export const pointsWithPaddedRepititions = (
   }
 
   return [oldPointsCopy.trim(), newPointsCopy.trim()]
+}
+
+export const withinMinMaxRange = (
+  val: number,
+  maxVal: number,
+  minVal: number
+) => Math.min(maxVal, Math.max(minVal, val))
+
+export const getIntegerizedValue = (value: number) => {
+  const decimals = value.toString().split('.')[1]?.length || 0
+  const factor = 10 ** decimals
+  const integerizedValue = value * factor
+  const lastDigit = integerizedValue % 10
+  if (integerizedValue > 10 && lastDigit !== 0 && lastDigit !== 5) {
+    const roundedIntegerized = Math.round(integerizedValue / 5) * 5
+
+    const ans = roundedIntegerized / factor
+    return ans
+  }
+  return value
 }

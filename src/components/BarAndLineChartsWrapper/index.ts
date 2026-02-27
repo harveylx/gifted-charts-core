@@ -75,7 +75,8 @@ export const useBarAndLineChartsWrapper = (
     lowlightOpacity,
     xAxisLabelsAtBottom,
     floatingYAxisLabels,
-    allowFontScaling
+    allowFontScaling,
+    xAxisLabelTexts
   } = props
 
   const {
@@ -86,7 +87,7 @@ export const useBarAndLineChartsWrapper = (
     roundToDigits: secondaryRoundToDigits,
     stepHeight: secondaryStepHeight,
     negativeStepHeight: secondaryNegativeStepHeight
-  } = axesAndRulesProps.secondaryYAxisConfig
+  } = axesAndRulesProps.secondaryYAxisConfig ?? {}
 
   const primaryYAxisHeightBelowOrigin =
     noOfSectionsBelowXAxis * negativeStepHeight
@@ -165,7 +166,7 @@ export const useBarAndLineChartsWrapper = (
   const negativeStepValue = axesAndRulesProps.negativeStepValue
   const roundToDigits = axesAndRulesProps.roundToDigits
 
-  const referenceLinesConfig = axesAndRulesProps.referenceLinesConfig
+  const referenceLinesConfig = axesAndRulesProps.referenceLinesConfig ?? {}
   const referenceLinesOverChartContent =
     referenceLinesConfig.referenceLinesOverChartContent ??
     AxesAndRulesDefaults.referenceLinesOverChartContent
@@ -203,7 +204,10 @@ export const useBarAndLineChartsWrapper = (
 
   const verticalLinesAr = noOfVerticalLines
     ? [...Array(noOfVerticalLines).keys()]
-    : (stackData ?? data).map((item) => {
+    : (chartType === chartTypes.BUBBLE
+        ? xAxisLabelTexts ?? []
+        : stackData ?? data
+      ).map((item) => {
         const {
           showVerticalLine,
           verticalLineThickness,
