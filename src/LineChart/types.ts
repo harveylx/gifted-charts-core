@@ -21,6 +21,12 @@ import {
   ColorFromToY
 } from '../utils/types'
 
+export interface BackgroundSlice {
+  from: number
+  to: number
+  color: ColorValue
+}
+
 export interface LineChartPropsType {
   height?: number
   overflowTop?: number
@@ -384,7 +390,7 @@ export interface LineChartPropsType {
   spreadAreaData?: SpreadData[]
   spreadAreaColor?: ColorValue
   spreadAreaOpacity?: number
-  showBackgroundSlices?: boolean
+  backgroundSlices?: BackgroundSlice[]
 }
 
 export interface lineDataItem {

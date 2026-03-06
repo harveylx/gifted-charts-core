@@ -29,6 +29,7 @@ export {
 export { useLineChart } from './LineChart'
 export { useLineChartBiColor } from './LineChart/LineChartBiColor'
 export {
+  type BackgroundSlice,
   type LineChartPropsType,
   type LineChartPropsTypeForWeb,
   type lineDataItem,

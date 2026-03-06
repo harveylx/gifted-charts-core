@@ -1,6 +1,6 @@
 import { type ColorValue } from 'react-native'
 import { type chartTypes, type yAxisSides } from './constants'
-import { lineDataItemNullSafe, type lineDataItem } from '../LineChart/types'
+import { lineDataItemNullSafe, type lineDataItem, type BackgroundSlice } from '../LineChart/types'
 import {
   lineConfigType,
   type barDataItem,
@@ -397,7 +397,7 @@ export interface BarAndLineChartsWrapperTypes {
   xAxisLabelsAtBottom: boolean
   onScrollEndDrag?: (event: any, direction: any) => void
   showVerticalLines?: boolean
-  showBackgroundSlices?: boolean
+  backgroundSlices?: BackgroundSlice[]
   xAxisLabelTexts?: string[]
 }
 
