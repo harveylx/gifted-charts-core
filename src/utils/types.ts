@@ -398,7 +398,6 @@ export interface BarAndLineChartsWrapperTypes {
   onScrollEndDrag?: (event: any, direction: any) => void
   showVerticalLines?: boolean
   backgroundSlices?: BackgroundSlice[]
-  xAxisRange?: number
   xAxisLabelTexts?: string[]
 }
 
