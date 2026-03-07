@@ -391,6 +391,7 @@ export interface LineChartPropsType {
   spreadAreaColor?: ColorValue
   spreadAreaOpacity?: number
   backgroundSlices?: BackgroundSlice[]
+  xAxisRange?: number
 }
 
 export interface lineDataItem {
@@ -408,6 +409,7 @@ export interface lineDataItem {
   textFontSize?: number
 
   spacing?: number
+  xValue?: number
 
   hideDataPoint?: boolean
   dataPointHeight?: number

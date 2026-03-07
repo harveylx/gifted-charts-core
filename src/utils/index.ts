@@ -253,7 +253,7 @@ export const getPathWithHighlight = (
   startIndex: number,
   endIndex: number,
   spacingArray: number[],
-  getX: (spacingArray: number[], i: number) => number,
+  getX: (spacingArray: number[], i: number, xValue?: number) => number,
   getY: (value: number) => number
 ): string => {
   let path = ''
